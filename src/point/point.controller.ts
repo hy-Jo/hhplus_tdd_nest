@@ -1,7 +1,5 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, ValidationPipe, Post, UsePipes } from "@nestjs/common";
-import { PointHistory, TransactionType, UserPoint } from "./point.model";
-import { UserPointTable } from "src/database/userpoint.table";
-import { PointHistoryTable } from "src/database/pointhistory.table";
+import { Body, Controller, Get, Param, Patch, ValidationPipe, Post, UsePipes } from "@nestjs/common";
+import { PointHistory, UserPoint } from "./point.model";
 import { PointBody as PointDto, IdParam } from "./point.dto";
 import { PointService } from './point.service';
 
@@ -34,7 +32,7 @@ export class PointController {
     @UsePipes(new ValidationPipe({ transform: true }))
     async charge(
         @Param() params: IdParam,
-        @Body(ValidationPipe) pointDto: PointDto,
+        @Body() pointDto: PointDto,
     ): Promise<UserPoint> {
         return await this.pointService.chargePoint(params.id, pointDto.amount);
     }
@@ -44,7 +42,7 @@ export class PointController {
      */
     @Post('use/:id')
     @UsePipes(new ValidationPipe({ transform: true }))
-    async usePoint(@Param() params: IdParam, @Body('amount') amount: number) {
-        return await this.pointService.usePoint(params.id, amount);
+    async use(@Param() params: IdParam, @Body() pointDto: PointDto): Promise<UserPoint> {
+        return await this.pointService.usePoint(params.id, pointDto.amount);
     }
 }

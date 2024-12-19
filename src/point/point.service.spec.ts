@@ -79,11 +79,27 @@ describe('PointService', () => {
 
   describe.only('chargePoint', () => {
     it('should charge user point', async () => {
-      const result = await pointService.chargePoint(1, 3000);  
+      const userId = 1;
+      const amount = 50;
+      const userPoint = { id: 1, point: 100, updateMillis: Date.now() };
+      const updatedUserPoint = { id: 1, point: 150, updateMillis: Date.now() };
 
-      const userPoint = await pointService.getPoint(1);
-      expect(userPoint).toEqual(result);
-      // const userId = 1;
+      jest.spyOn(userPointTable, 'selectById').mockResolvedValueOnce(userPoint);
+      jest.spyOn(userPointTable, 'insertOrUpdate').mockResolvedValue(undefined);
+      jest.spyOn(pointHistoryTable, 'insert').mockResolvedValue({
+        id: 1,
+        userId: 1,
+        type: TransactionType.CHARGE,
+        amount: amount,
+        timeMillis: Date.now(),
+      });
+      jest.spyOn(userPointTable, 'selectById').mockResolvedValueOnce(updatedUserPoint);
+
+      const result = await pointService.chargePoint(userId, amount);
+      expect(result).toEqual(updatedUserPoint);
+      expect(userPointTable.selectById).toHaveBeenCalledWith(1);
+      expect(userPointTable.insertOrUpdate).toHaveBeenCalledWith(1, 150);
+      expect(pointHistoryTable.insert).toHaveBeenCalledWith(1, 150, TransactionType.CHARGE, expect.any(Number));
       // const amount = 50;
       // const currentPoint = 100;
       // const updatedPoint = currentPoint + amount;

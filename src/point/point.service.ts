@@ -12,14 +12,18 @@ export class PointService {
 
     //user point 조회
     async getPoint(id: number) {
-        return await this.userPointTable.selectById(id);
+        const userPoint = await this.userPointTable.selectById(id);
+        if (!userPoint) {
+            throw new NotFoundException('No User Found');
+        }
+        return userPoint;
     }
 
     //user point history 조회
     async getPointHistory(id: number) {
         const history = await this.pointHistoryTable.selectAllByUserId(id);
         if (history.length === 0) {
-            throw new NotFoundException('No Hidtory');
+            throw new NotFoundException('No History Found');
         }
         return history;
     }
@@ -28,23 +32,23 @@ export class PointService {
     async chargePoint(id: number, amount: number) {
         const userPoint = await this.userPointTable.selectById(id);
         const updatedPoint = userPoint.point + amount;
-        
+
         await this.pointHistoryTable.insert(id, amount, TransactionType.CHARGE, Date.now());
         await this.userPointTable.insertOrUpdate(id, updatedPoint);
-        
+
         return await this.userPointTable.selectById(id);
     }
 
     //user point 사용
     async usePoint(id: number, amount: number) {
         const userPoint = await this.userPointTable.selectById(id);
-        if (userPoint.point < amount) throw new Error('Not enough point');
+        if (userPoint.point < amount) throw new Error('Not Enough Points');
 
         const updatedPoint = userPoint.point - amount;
 
         await this.pointHistoryTable.insert(id, -amount, TransactionType.USE, Date.now());
         await this.userPointTable.insertOrUpdate(id, updatedPoint);
-        
+
         return await this.userPointTable.selectById(id);
     }
 

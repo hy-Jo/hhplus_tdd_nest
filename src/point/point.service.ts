@@ -30,7 +30,7 @@ export class PointService {
 
     //user point 충전
     async chargePoint(id: number, amount: number) {
-        let currentPoint =0;
+        let currentPoint = 0;
         const userPoint = await this.userPointTable.selectById(id);
 
         if (userPoint) currentPoint += userPoint.point;
@@ -39,7 +39,9 @@ export class PointService {
         await this.pointHistoryTable.insert(id, amount, TransactionType.CHARGE, Date.now());
         await this.userPointTable.insertOrUpdate(id, updatedPoint);
 
-        return await this.userPointTable.selectById(id);
+        const result = await this.userPointTable.selectById(id);
+        console.log(result);
+        return result;
     }
 
     //user point 사용

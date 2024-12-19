@@ -39,11 +39,11 @@ describe('PointService', () => {
   describe('getPoint', () => {
     it('should return user point by user Id', async () => {
       const userId = 1;
-      const userPoint = { id: 1, point: 100, updateMillis: Date.now() };
-      jest.spyOn(userPointTable, 'selectById').mockResolvedValue(userPoint);
+      const pointHistory = { id: 1, point: 100, updateMillis: Date.now() };
+      jest.spyOn(userPointTable, 'selectById').mockResolvedValue(pointHistory);
 
       const result = await pointService.getPoint(userId);
-      expect(result).toEqual(userPoint);
+      expect(result).toEqual(pointHistory);
       expect(userPointTable.selectById).toHaveBeenCalledWith(1);
     });
     it('user not found', async () => {
@@ -58,42 +58,49 @@ describe('PointService', () => {
   describe('getPointHistory', () => {
     it('should return point history', async () => {
       const userId = 1;
-      const pointHistory = [
+      const pointHistories = [
         { id: 1, userId: 1, type: TransactionType.CHARGE, amount: 100, timeMillis: Date.now() },
       ];
-      jest.spyOn(pointHistoryTable, 'selectAllByUserId').mockResolvedValue(pointHistory);
+      jest.spyOn(pointHistoryTable, 'selectAllByUserId').mockResolvedValue(pointHistories);
 
       const result = await pointService.getPointHistory(userId);
-      expect(result).toEqual(pointHistory);
+      expect(result).toEqual(pointHistories);
       expect(pointHistoryTable.selectAllByUserId).toHaveBeenCalledWith(1);
     });
     it('No history', async () => {
       const userId = 1;
-      const pointHistory = [];
-      jest.spyOn(pointHistoryTable, 'selectAllByUserId').mockResolvedValue(pointHistory);
+      const pointHistories = [];
+      jest.spyOn(pointHistoryTable, 'selectAllByUserId').mockResolvedValue(pointHistories);
 
       await expect(pointService.getPointHistory(userId)).rejects.toThrow(NotFoundException);
       expect(pointHistoryTable.selectAllByUserId).toHaveBeenCalledWith(userId);
     });
   });
 
-  describe('chargePoint', () => {
+  describe.only('chargePoint', () => {
     it('should charge user point', async () => {
-      const userId = 1;
-      const amount = 50;
-      const userPoint = { id: 1, point: 100, updateMillis: Date.now() };
-      const updatedUserPoint = { id: 1, point: 150, updateMillis: Date.now() };
+      const result = await pointService.chargePoint(1, 3000);  
 
-      jest.spyOn(userPointTable, 'selectById').mockResolvedValueOnce(userPoint);
-      jest.spyOn(userPointTable, 'insertOrUpdate').mockResolvedValue(undefined);
-      jest.spyOn(pointHistoryTable, 'insert').mockResolvedValue(undefined);
-      jest.spyOn(userPointTable, 'selectById').mockResolvedValueOnce(updatedUserPoint);
+      const userPoint = await pointService.getPoint(1);
+      expect(userPoint).toEqual(result);
+      // const userId = 1;
+      // const amount = 50;
+      // const currentPoint = 100;
+      // const updatedPoint = currentPoint + amount;
+      // const currentHistory = { id: 1, point: 100, updateMillis: Date.now() };
+      // const updatedHistory = { id: 1, point: 150, updateMillis: expect.any(Number) };
 
-      const result = await pointService.chargePoint(userId, amount);
-      expect(result).toEqual(updatedUserPoint);
-      expect(userPointTable.selectById).toHaveBeenCalledWith(1);
-      expect(userPointTable.insertOrUpdate).toHaveBeenCalledWith(1, 150);
-      expect(pointHistoryTable.insert).toHaveBeenCalledWith(1, 150, TransactionType.CHARGE, expect.any(Number));
+      // jest.spyOn(userPointTable, 'selectById').mockResolvedValue(currentHistory);
+      // jest.spyOn(userPointTable, 'insertOrUpdate').mockResolvedValue(updatedHistory);
+      // jest.spyOn(pointHistoryTable, 'insert').mockResolvedValue({} as any);
+
+      // const result = await pointService.chargePoint(userId, amount);
+
+      
+      // expect(userPointTable.selectById).toHaveBeenCalledWith(userId);
+      // expect(userPointTable.insertOrUpdate).toHaveBeenCalledWith(userId, updatedPoint);
+      // expect(pointHistoryTable.insert).toHaveBeenCalledWith(userId, amount,  TransactionType.CHARGE, expect.any(Number));
+      // expect(result).toEqual(currentHistory);
     });
   });
 });

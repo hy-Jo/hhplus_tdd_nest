@@ -30,8 +30,11 @@ export class PointService {
 
     //user point 충전
     async chargePoint(id: number, amount: number) {
+        let currentPoint =0;
         const userPoint = await this.userPointTable.selectById(id);
-        const updatedPoint = userPoint.point + amount;
+
+        if (userPoint) currentPoint += userPoint.point;
+        const updatedPoint = currentPoint + amount;
 
         await this.pointHistoryTable.insert(id, amount, TransactionType.CHARGE, Date.now());
         await this.userPointTable.insertOrUpdate(id, updatedPoint);

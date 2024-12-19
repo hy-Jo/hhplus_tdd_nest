@@ -37,7 +37,7 @@ describe('PointService', () => {
   });
 
   describe('getPoint', () => {
-    it.only('should return user point by user ID', async () => {
+    it('should return user point by user Id', async () => {
       const userId = 1;
       const userPoint = { id: 1, point: 100, updateMillis: Date.now() };
       jest.spyOn(userPointTable, 'selectById').mockResolvedValue(userPoint);
@@ -46,7 +46,7 @@ describe('PointService', () => {
       expect(result).toEqual(userPoint);
       expect(userPointTable.selectById).toHaveBeenCalledWith(1);
     });
-    it.only('user not found', async () => {
+    it('user not found', async () => {
       const userId = 2;
       jest.spyOn(userPointTable, 'selectById').mockResolvedValue(null);
 
@@ -56,7 +56,7 @@ describe('PointService', () => {
   });
 
   describe('getPointHistory', () => {
-    it('should return user point history', async () => {
+    it('should return point history', async () => {
       const userId = 1;
       const pointHistory = [
         { id: 1, userId: 1, type: TransactionType.CHARGE, amount: 100, timeMillis: Date.now() },
@@ -66,6 +66,14 @@ describe('PointService', () => {
       const result = await pointService.getPointHistory(userId);
       expect(result).toEqual(pointHistory);
       expect(pointHistoryTable.selectAllByUserId).toHaveBeenCalledWith(1);
+    });
+    it('No history', async () => {
+      const userId = 1;
+      const pointHistory = [];
+      jest.spyOn(pointHistoryTable, 'selectAllByUserId').mockResolvedValue(pointHistory);
+
+      await expect(pointService.getPointHistory(userId)).rejects.toThrow(NotFoundException);
+      expect(pointHistoryTable.selectAllByUserId).toHaveBeenCalledWith(userId);
     });
   });
 

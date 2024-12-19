@@ -1,59 +1,50 @@
-import { Body, Controller, Get, Param, Patch, ValidationPipe } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Get, Param, Patch, ValidationPipe, Post, UsePipes } from "@nestjs/common";
 import { PointHistory, TransactionType, UserPoint } from "./point.model";
 import { UserPointTable } from "src/database/userpoint.table";
 import { PointHistoryTable } from "src/database/pointhistory.table";
-import { PointBody as PointDto } from "./point.dto";
-
+import { PointBody as PointDto, IdParam } from "./point.dto";
+import { PointService } from './point.service';
 
 @Controller('/point')
 export class PointController {
-
-    constructor(
-        private readonly userDb: UserPointTable,
-        private readonly historyDb: PointHistoryTable,
-    ) {}
+    constructor(private readonly pointService: PointService) {}
 
     /**
      * TODO - 특정 유저의 포인트를 조회하는 기능을 작성해주세요.
      */
     @Get(':id')
-    async point(@Param('id') id): Promise<UserPoint> {
-        const userId = Number.parseInt(id)
-        return { id: userId, point: 0, updateMillis: Date.now() }
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async point(@Param() params: IdParam): Promise<UserPoint> {
+        return await this.pointService.getPoint(params.id);
     }
 
     /**
      * TODO - 특정 유저의 포인트 충전/이용 내역을 조회하는 기능을 작성해주세요.
      */
     @Get(':id/histories')
-    async history(@Param('id') id): Promise<PointHistory[]> {
-        const userId = Number.parseInt(id)
-        return []
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async history(@Param() params: IdParam): Promise<PointHistory[]> {
+        return await this.pointService.getPointHistory(params.id);
     }
 
     /**
      * TODO - 특정 유저의 포인트를 충전하는 기능을 작성해주세요.
      */
     @Patch(':id/charge')
+    @UsePipes(new ValidationPipe({ transform: true }))
     async charge(
-        @Param('id') id,
+        @Param() params: IdParam,
         @Body(ValidationPipe) pointDto: PointDto,
     ): Promise<UserPoint> {
-        const userId = Number.parseInt(id)
-        const amount = pointDto.amount
-        return { id: userId, point: amount, updateMillis: Date.now() }
+        return await this.pointService.chargePoint(params.id, pointDto.amount);
     }
 
     /**
      * TODO - 특정 유저의 포인트를 사용하는 기능을 작성해주세요.
      */
-    @Patch(':id/use')
-    async use(
-        @Param('id') id,
-        @Body(ValidationPipe) pointDto: PointDto,
-    ): Promise<UserPoint> {
-        const userId = Number.parseInt(id)
-        const amount = pointDto.amount
-        return { id: userId, point: amount, updateMillis: Date.now() }
+    @Post('use/:id')
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async usePoint(@Param() params: IdParam, @Body('amount') amount: number) {
+        return await this.pointService.usePoint(params.id, amount);
     }
 }
